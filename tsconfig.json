@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     "app/lib/placeholder-data.js",
     "scripts/seed.js"
-  ],
+, "app/api/appointments/index.js", "app/api/rooms/index.js"  ],
   "exclude": ["node_modules"]
 }
