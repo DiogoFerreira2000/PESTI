@@ -1,4 +1,4 @@
-import connectMongoDB from "@/app/libs/mongodb";
+import connectMongoDB from "@/app/mongodb/mongodb";
 import Appointment from "@/app/model/appointment";
 import { NextResponse } from "next/server";
 
@@ -12,7 +12,7 @@ export async function POST(request) {
 export async function GET() {
     await connectMongoDB();
     const appointments = await Appointment.find();
-    return NextResponse.json({appointments});
+    return NextResponse.json(appointments);
 };
 
 export async function DELETE(request) {

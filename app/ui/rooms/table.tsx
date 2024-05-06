@@ -20,31 +20,23 @@ export default async function RoomsTable({
               <div className="md:hidden">
                 {rooms?.map((room) => (
                   <div
-                    key={room.alias}
+                    key={room.roomAlias}
                     className="mb-2 w-full rounded-md bg-white p-4"
                   >
                     <div className="border-b pb-4">
-                      <p className="text-lg font-semibold">{room.name}</p> 
-                      <p className="text-sm text-gray-500">{room.alias}</p> 
-                      <p className="text-sm text-gray-500">{room.email}</p>
-                    </div>
-                    <div className="flex w-full items-center justify-between py-5">
-                      <div className="flex w-1/2 flex-col">
-                        <p className="text-xs">Total Appointments</p>
-                        <p className="font-medium">{room.total_appointments}</p>
-                      </div>
-                      <div className="flex w-1/2 flex-col">
-                        <p className="text-xs">Busy</p>
-                        <p className="font-medium">{room.busy}</p>
-                      </div>
+                      <p className="text-lg text-gray-500">{room.name}</p> 
+                      <p className="text-lg text-gray-500">{room.roomAlias}</p> 
+                      <p className="text-lg text-gray-500">{room.email}</p>
+                      <p className="text-lg font-gray-500">{room.total_appointments}</p> 
+                      <p className="text-lg text-gray-500">{room.busy}</p>
                     </div>
                   </div>
                 ))}
               </div>
               <table className="hidden min-w-full rounded-md text-gray-900 md:table">
-                <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
+                <thead className="rounded-md bg-gray-50 text-left text-lg font-normal">
                   <tr>
-                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                    <th scope="col" className="px-3 py-5 font-medium">
                       Name
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
@@ -54,9 +46,9 @@ export default async function RoomsTable({
                       Email
                     </th>
                     <th scope="col" className="px-3 py-5 font-medium">
-                      Total Appointments
+                      Number of Appointments
                     </th>
-                    <th scope="col" className="px-4 py-5 font-medium">
+                    <th scope="col" className="px-3 py-5 font-medium">
                       Busy
                     </th>
                   </tr>
@@ -64,12 +56,12 @@ export default async function RoomsTable({
 
                 <tbody className="divide-y divide-gray-200 text-gray-900">
                   {rooms.map((room) => (
-                    <tr key={room.alias} className="group">
+                    <tr key={room.roomAlias} className="group">
                       <td className="whitespace-nowrap bg-white py-5 pl-4 pr-3 text-sm text-black group-first-of-type:rounded-md group-last-of-type:rounded-md sm:pl-6">
                         {room.name}
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
-                        {room.alias}
+                        {room.roomAlias}
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
                         {room.email}
@@ -78,7 +70,7 @@ export default async function RoomsTable({
                         {room.total_appointments}
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
-                        {room.busy}
+                        {room.busy ? 'Yes' : 'No'}
                       </td>
                     </tr>
                   ))}

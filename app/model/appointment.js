@@ -2,13 +2,16 @@ import mongoose, { Schema } from "mongoose";
 
 const appointmentSchema = new Schema(
   {
-    room: String,
     subject: String,
     organizer: String,
     date: Date,
     start: Date,
     end: Date,
-    open: Boolean,
+    open: String,
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Room'
+    }
   },
   {
     collection: "appointments"

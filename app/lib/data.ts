@@ -1,7 +1,6 @@
 import {
   Room,
   Appointment,
-  AppointmentsTable,
   RoomField,
   RoomsTableType,
 } from './definitions';
@@ -9,59 +8,14 @@ import { unstable_noStore as noStore } from 'next/cache';
 
 export const revalidationTime = 5;
 
-export async function fetchAllAppointments(): Promise<AppointmentsTable[]> {
+
+
+
+export async function fetchRooms() {
   noStore();
 
   try {
-    const res = await fetch('https://rooms.aad-bonfim.devscope.net/api/rooms', { next: { revalidate: revalidationTime } });
-    if (!res.ok) {
-      throw new Error(`HTTP error! Status: ${res.status}`);
-    }
-
-    const rooms: Room[] = await res.json();
-    let allAppointments: AppointmentsTable[] = [];
-
-    rooms.forEach((room: Room) => {
-      const roomAppointments = room.appointments.map((appointment: Appointment): AppointmentsTable => {
-        // Convert timestamps into JavaScript Date objects
-        const startDate = new Date(appointment.start);
-        const endDate = new Date(appointment.end);
-
-        // Extract and format the date part
-        const date = startDate.toISOString().split('T')[0]; // Will format as "yyyy-mm-dd"
-
-        // Extract and format the time parts
-        const startTime = startDate.toISOString().split('T')[1].slice(0, 5); // Will format as "hh:mm"
-        const endTime = endDate.toISOString().split('T')[1].slice(0, 5); // Will format as "hh:mm"
-
-        return {
-          room: room.name,
-          subject: appointment.subject,
-          organizer: appointment.organizer,
-          date,
-          start: startTime,
-          end: endTime,
-          private: appointment.private
-        };
-      });
-
-      allAppointments = allAppointments.concat(roomAppointments);
-    });
-
-    return allAppointments;
-
-  } catch (error) {
-    console.error("Failed to fetch all appointments: ", error);
-    throw error;
-  }
-}
-
-
-export async function fetchRooms(): Promise<RoomField[]> {
-  noStore();
-
-  try {
-    const res = await fetch('https://rooms.aad-bonfim.devscope.net/api/rooms');
+    const res = await fetch('http://localhost:3000/api/rooms');
     if (!res.ok) {
       throw new Error(`HTTP error! Status: ${res.status}`);
     }
@@ -69,47 +23,58 @@ export async function fetchRooms(): Promise<RoomField[]> {
 
     const allRooms: RoomField[] = rooms.map((room: Room): RoomField => {
       return {
+        _id: room._id,
         name: room.name,
-        alias: room.alias
       };
     });
 
     return allRooms;
 
   } catch (error) {
-    console.error("Failed to fetch all rooms: ", error);
-    throw error;
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch all rooms.');
   }
 }
 
 
-export async function fetchFilteredRooms(query: string): Promise<RoomsTableType[]> {
+export async function fetchFilteredRooms(query: string) {
   noStore();
 
   try {
-    const res = await fetch('https://rooms.aad-bonfim.devscope.net/api/rooms', { next: { revalidate: revalidationTime } });
-    if (!res.ok) {
-      throw new Error(`HTTP error! Status: ${res.status}`);
+    const room_res = await fetch('http://localhost:3000/api/rooms');
+    if (!room_res.ok) {
+      throw new Error(`HTTP error! Status: ${room_res.status}`);
     }
+    const rooms = await room_res.json();
 
-    const rooms: Room[] = await res.json();
+    const appointment_res = await fetch('http://localhost:3000/api/appointments', { next: { revalidate: revalidationTime } });
+    if (!appointment_res.ok) {
+      throw new Error(`HTTP error! Status: ${appointment_res.status}`);
+    }
+    const appointments = await appointment_res.json();
 
-    let filteredRooms: RoomsTableType[] = rooms
-      .filter((room) => room.name.includes(query) || room.alias.includes(query))
-      .map((room): RoomsTableType => {
-        return {
-          name: room.name,
-          alias: room.alias,
-          email: room.email,
-          total_appointments: room.appointments.length,
-          busy: room.busy,
-        };
-      });
+    const appointmentRoomCounts: Record<string, number> = {};
+    appointments.forEach((appointment: Appointment) => {
+      const room_id = appointment.room_id;
+      appointmentRoomCounts[room_id] = (appointmentRoomCounts[room_id] || 0) + 1;
+    });
+
+    const filteredRooms = rooms.filter((room: Room) => 
+      room.name.includes(query) || room.roomAlias.includes(query) || room.email.includes(query)
+    ).map((room: Room): RoomsTableType => {
+      return {
+        name: room.name,
+        roomAlias: room.roomAlias,
+        email: room.email,
+        total_appointments: appointmentRoomCounts[room._id] || 0,
+        busy: room.busy
+      };
+    });
 
     return filteredRooms;
 
   } catch (error) {
-    console.error("Failed to fetch room table: ", error);
-    throw error;
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch the room table.');
   }
 }
