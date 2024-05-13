@@ -8,13 +8,24 @@ export type Room = {
 
 export type Appointment = {
   _id: string;
-  room_id: string;
   subject: string;
   organizer: string;
+  date: string;
   start: string;
   end: string;
-  open: 'true' | 'false';
+  open: 'True' | 'False';
+  room_id: string;
 };
+
+export type AppointmentsTableType = {
+  subject: string;
+  organizer: string;
+  roomName: string;
+  date: string;
+  start: string;
+  end: string;
+  open: 'True' | 'False';
+}
 
 export type RoomField = {
   _id: string;
