@@ -8,12 +8,13 @@ const appointmentSchema = new Schema(
     start: Date,
     end: Date,
     open: String,
-    room: {
+    room_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room'
     }
   },
   {
+    versionKey: false,
     collection: "appointments"
   }
 );

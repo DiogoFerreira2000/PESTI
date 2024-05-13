@@ -3,9 +3,9 @@ import Appointment from "@/app/model/appointment";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-    const { room, subject, organizer, date, start, end, open } = await request.json();
+    const { subject, organizer, date, start, end, open, room_id } = await request.json();
     await connectMongoDB();
-    await Appointment.create({ room, subject, organizer, date, start, end, open });
+    await Appointment.create({ subject, organizer, date, start, end, open, room_id });
     return NextResponse.json({ message: "Appointment Created" }, { status: 201 });
 }
 
