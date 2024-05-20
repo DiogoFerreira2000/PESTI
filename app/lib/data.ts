@@ -2,12 +2,13 @@ import {
   Room,
   Appointment,
   AppointmentsTableType,
+  AppointmentForm,
   RoomField,
   RoomsTableType
 } from './definitions';
 import { unstable_noStore as noStore } from 'next/cache';
 
-export const revalidationTime = 5;
+const revalidationTime = 5;
 const ITEMS_PER_PAGE = 6;
 
 export async function fetchFilteredAppointments(query: string, currentPage: number) {
@@ -33,36 +34,130 @@ export async function fetchFilteredAppointments(query: string, currentPage: numb
     });
 
     const filteredAppointments = appointments
-      .filter((appointment: Appointment) =>
-        appointment.subject.includes(query) || roomNameMap[appointment.room_id].includes(query)
-      )
-      .map((appointment: Appointment): AppointmentsTableType => {
-        const roomName = roomNameMap[appointment.room_id];
+    .filter((appointment: Appointment) =>
+      appointment.subject.includes(query) || roomNameMap[appointment.room_id].includes(query)
+    )
+    .map((appointment: Appointment): AppointmentsTableType => {
+      const roomName = roomNameMap[appointment.room_id];
         
-        const appointmentDate = new Date(appointment.date);
-        const appointmentStart = new Date(appointment.start);
-        const appointmentEnd = new Date(appointment.end);
+      const appointmentDate = new Date(appointment.date);
+      const appointmentStart = new Date(appointment.start);
+      const appointmentEnd = new Date(appointment.end);
 
-        const date = appointmentDate.toISOString().split('T')[0];
-        const startTime = appointmentStart.toISOString().split('T')[1].substring(0, 5);
-        const endTime = appointmentEnd.toISOString().split('T')[1].substring(0, 5);
+      const date = appointmentDate.toISOString().split('T')[0];
+      const startTime = appointmentStart.toISOString().split('T')[1].substring(0, 5);
+      const endTime = appointmentEnd.toISOString().split('T')[1].substring(0, 5);
 
-        return {
-          subject: appointment.subject,
-          organizer: appointment.organizer,
-          roomName: roomName,
-          date: date,
-          start: startTime,
-          end: endTime,
-          open: appointment.open
-        }
-      });
+      return {
+        _id: appointment._id,
+        subject: appointment.subject,
+        organizer: appointment.organizer,
+        roomName: roomName,
+        date: date,
+        start: startTime,
+        end: endTime,
+        open: appointment.open
+      }
+    });
 
-    return filteredAppointments;
+    const paginatedAppointments = filteredAppointments.slice(offset, offset + ITEMS_PER_PAGE);
+    return paginatedAppointments;
 
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch the appointments table.');
+  }
+}
+
+
+export async function fetchAppointmentsPages(query: string) {
+  noStore();
+
+  try {
+    const appointment_res = await fetch('http://localhost:3000/api/appointments', { next: { revalidate: revalidationTime } });
+    if (!appointment_res.ok) {
+      throw new Error(`HTTP error! Status: ${appointment_res.status}`);
+    }
+    const appointments = await appointment_res.json();
+
+    const room_res = await fetch('http://localhost:3000/api/rooms');
+    if (!room_res.ok) {
+      throw new Error(`HTTP error! Status: ${room_res.status}`);
+    }
+    const rooms = await room_res.json();
+
+    const roomNameMap: Record<string, string> = {};
+    rooms.forEach((room: Room) => {
+      roomNameMap[room._id] = room.name;
+    });
+
+    const filteredAppointments = appointments
+    .filter((appointment: Appointment) =>
+      appointment.subject.includes(query) || roomNameMap[appointment.room_id].includes(query)
+    )
+    .map((appointment: Appointment): AppointmentsTableType => {
+      const roomName = roomNameMap[appointment.room_id];
+        
+      const appointmentDate = new Date(appointment.date);
+      const appointmentStart = new Date(appointment.start);
+      const appointmentEnd = new Date(appointment.end);
+
+      const date = appointmentDate.toISOString().split('T')[0];
+      const startTime = appointmentStart.toISOString().split('T')[1].substring(0, 5);
+      const endTime = appointmentEnd.toISOString().split('T')[1].substring(0, 5);
+
+      return {
+        _id: appointment._id,
+        subject: appointment.subject,
+        organizer: appointment.organizer,
+        roomName: roomName,
+        date: date,
+        start: startTime,
+        end: endTime,
+        open: appointment.open
+      }
+    });
+
+    const totalPages = Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE);
+    return totalPages;
+
+  } catch (error) {
+    console.error('Database Error: ', error);
+    throw new Error('Failed to fetch the total number of appointments.');
+  }
+}
+
+
+export async function fetchAppointmentById(id: string) {
+  noStore();
+
+  try {
+    const appointment_res = await fetch('http://localhost:3000/api/appointments', { next: { revalidate: revalidationTime } });
+    if (!appointment_res.ok) {
+      throw new Error(`HTTP error! Status: ${appointment_res.status}`);
+    }
+    const appointments = await appointment_res.json();
+
+    const filteredAppointment = appointments
+    .filter((appointment: Appointment) =>
+      appointment._id.includes(id)
+    )
+    .map((appointment: Appointment): AppointmentForm => {
+      return {
+        _id: appointment._id,
+        subject: appointment.subject,
+        date: appointment.date,
+        start: appointment.start,
+        end: appointment.end,
+        room_id: appointment.room_id
+      }
+    });
+
+    return filteredAppointment[0];
+
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch appointment.');
   }
 }
 

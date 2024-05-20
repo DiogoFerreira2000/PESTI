@@ -1,19 +1,33 @@
-import AppointmentStatus from '@/app/ui/appointments/status';
-import { AppointmentsTableType } from '@/app/lib/definitions';
+import AppointmentStatus from '@/app/ui/appointments/status';;
+import { UpdateAppointment, DeleteAppointment } from '@/app/ui/appointments/buttons';
+import { fetchFilteredAppointments } from '@/app/lib/data';
 
 export default async function AppointmentsTable({
-  appointments
+  query,
+  currentPage,
 }: {
-  appointments: AppointmentsTableType[]
+  query: string;
+  currentPage: number;
 }) {
+  const appointments = await fetchFilteredAppointments(query, currentPage);
+
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
-            {appointments?.map((appointment) => (
+            {appointments?.map((appointment: { 
+              _id: string; 
+              subject: string; 
+              organizer: string; 
+              roomName: string; 
+              date: string; 
+              start: string; 
+              end: string; 
+              open: string; 
+            }) => (
               <div
-                key={appointment.subject}
+                key={appointment._id}
                 className="mb-2 w-full rounded-md bg-white p-4"
               >
                 <div className="flex items-center justify-between border-b pb-4">
@@ -26,6 +40,12 @@ export default async function AppointmentsTable({
                     <p className="text-lg text-gray-500">{appointment.end}</p>
                   </div>
                   <AppointmentStatus status={appointment.open} />
+                </div>
+                <div className="flex w-full items-center justify-between pt-4">
+                  <div className="flex justify-end gap-2">
+                    <UpdateAppointment id={appointment._id} />
+                    <DeleteAppointment id={appointment._id} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -54,12 +74,23 @@ export default async function AppointmentsTable({
                 <th scope="col" className="px-3 py-5 font-medium">
                   Private
                 </th>
+                <th scope="col" className="relative py-3 pl-6 pr-3">
+                  <span className="sr-only">Edit</span>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {appointments?.map((appointment) => (
+              {appointments?.map((appointment: { 
+                _id: string; 
+                subject: string; 
+                organizer: string; 
+                roomName: string; 
+                date: string; start: 
+                string; end: string; 
+                open: string; 
+              }) => (
                 <tr
-                  key={appointment.subject}
+                  key={appointment._id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
@@ -82,6 +113,12 @@ export default async function AppointmentsTable({
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <AppointmentStatus status={appointment.open} />
+                  </td>
+                  <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                    <div className="flex justify-end gap-3">
+                      <UpdateAppointment id={appointment._id} />
+                      <DeleteAppointment id={appointment._id} />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -139,7 +139,7 @@ export function TableRowSkeleton() {
   );
 }
 
-export function InvoicesMobileSkeleton() {
+export function AppointmentsMobileSkeleton() {
   return (
     <div className="mb-2 w-full rounded-md bg-white p-4">
       <div className="flex items-center justify-between border-b border-gray-100 pb-8">
@@ -163,36 +163,42 @@ export function InvoicesMobileSkeleton() {
   );
 }
 
-export function InvoicesTableSkeleton() {
+export function AppointmentsTableSkeleton() {
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
-            <InvoicesMobileSkeleton />
-            <InvoicesMobileSkeleton />
-            <InvoicesMobileSkeleton />
-            <InvoicesMobileSkeleton />
-            <InvoicesMobileSkeleton />
-            <InvoicesMobileSkeleton />
+            <AppointmentsMobileSkeleton />
+            <AppointmentsMobileSkeleton />
+            <AppointmentsMobileSkeleton />
+            <AppointmentsMobileSkeleton />
+            <AppointmentsMobileSkeleton />
+            <AppointmentsMobileSkeleton />
           </div>
           <table className="hidden min-w-full text-gray-900 md:table">
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
-                <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Customer
+              <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                  Subject
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Email
+                  Organizer
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Amount
+                  Room
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Date
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Status
+                  Start
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  End
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Private
                 </th>
                 <th
                   scope="col"

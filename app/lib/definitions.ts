@@ -18,6 +18,7 @@ export type Appointment = {
 };
 
 export type AppointmentsTableType = {
+  _id: string;
   subject: string;
   organizer: string;
   roomName: string;
@@ -25,12 +26,25 @@ export type AppointmentsTableType = {
   start: string;
   end: string;
   open: 'True' | 'False';
-}
+};
+
+export type deleteAppointmentRequest = {
+  _id: string,
+};
+
+export type AppointmentForm = {
+  _id: string;
+  subject: string;
+  date: string;
+  start: string;
+  end: string;
+  room_id: string;
+};
 
 export type RoomField = {
   _id: string;
   name: string;
-}
+};
 
 export type RoomsTableType = {
   name: string;
@@ -38,4 +52,4 @@ export type RoomsTableType = {
   email: string;
   total_appointments: number;
   busy: boolean;
-}
+};
