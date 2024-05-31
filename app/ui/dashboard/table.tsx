@@ -1,3 +1,4 @@
+import RoomStatus from '@/app/ui/dashboard/room-status';
 import { lusitana } from '@/app/ui/fonts';
 import Search from '@/app/ui/search';
 import { RoomsTableType } from '@/app/lib/definitions';
@@ -30,6 +31,7 @@ export default async function RoomsTable({
                       <p className="text-lg font-gray-500">{room.total_appointments}</p> 
                       <p className="text-lg text-gray-500">{room.busy}</p>
                     </div>
+                    <RoomStatus busy={room.busy} />
                   </div>
                 ))}
               </div>
@@ -69,8 +71,8 @@ export default async function RoomsTable({
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
                         {room.total_appointments}
                       </td>
-                      <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
-                        {room.busy ? 'Yes' : 'No'}
+                      <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
+                        <RoomStatus busy={room.busy} />
                       </td>
                     </tr>
                   ))}

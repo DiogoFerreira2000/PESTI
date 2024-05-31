@@ -149,7 +149,8 @@ export async function fetchAppointmentById(id: string) {
         date: appointment.date,
         start: appointment.start,
         end: appointment.end,
-        room_id: appointment.room_id
+        room_id: appointment.room_id,
+        open: appointment.open,
       }
     });
 

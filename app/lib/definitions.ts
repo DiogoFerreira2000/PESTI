@@ -28,10 +28,6 @@ export type AppointmentsTableType = {
   open: 'True' | 'False';
 };
 
-export type deleteAppointmentRequest = {
-  _id: string,
-};
-
 export type AppointmentForm = {
   _id: string;
   subject: string;
@@ -39,6 +35,7 @@ export type AppointmentForm = {
   start: string;
   end: string;
   room_id: string;
+  open: 'True' | 'False';
 };
 
 export type RoomField = {

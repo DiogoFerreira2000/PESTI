@@ -12,6 +12,13 @@ export const formatDateToLocal = (
   return formatter.format(date);
 };
 
+export const transformTimeToDate = (time: string, date: Date) => {
+  const [hours, minutes] = time.split(':');
+  const newDate = new Date(date);
+  newDate.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
+  return newDate.toISOString();
+};
+
 export const generatePagination = (currentPage: number, totalPages: number) => {
   // If the total number of pages is 7 or less,
   // display all pages without any ellipsis.

@@ -18,7 +18,6 @@ const links = [
     href: '/dashboard/appointments',
     icon: DocumentDuplicateIcon,
   },
-  { name: 'Rooms', href: '/dashboard/rooms', icon: UserGroupIcon },
 ];
 
 export default function NavLinks() {

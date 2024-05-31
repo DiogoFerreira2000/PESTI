@@ -1,30 +1,26 @@
-import { lusitana } from '@/app/ui/fonts';
-import { Suspense } from 'react';
-import { 
-    RevenueChartSkeleton,
-    LatestInvoicesSkeleton,
-    CardsSkeleton,
-} from '@/app/ui/skeletons';
- 
-export default async function Page() {
-    return (
-        <main>
-            <h1 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
-                Dashboard
-            </h1>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <Suspense fallback={<CardsSkeleton />}>
-                    
-                </Suspense>
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-                <Suspense fallback={<RevenueChartSkeleton />}>
-                    
-                </Suspense>
-                <Suspense fallback={<LatestInvoicesSkeleton />}>
-                    
-                </Suspense>
-            </div>
-        </main>
-    );
+import { fetchFilteredRooms } from '@/app/lib/data';
+import RoomsTable from '@/app/ui/dashboard/table';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Rooms',
+};
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+  };
+}) {
+  const query = searchParams?.query || '';
+
+  const rooms = await fetchFilteredRooms(query);
+
+  return (
+    <main>
+      <RoomsTable rooms={rooms} />
+    </main>
+  );
 }

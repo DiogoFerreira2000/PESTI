@@ -1,4 +1,4 @@
-import AppointmentStatus from '@/app/ui/appointments/status';;
+import AppointmentStatus from '@/app/ui/appointments/status';
 import { UpdateAppointment, DeleteAppointment } from '@/app/ui/appointments/buttons';
 import { fetchFilteredAppointments } from '@/app/lib/data';
 
