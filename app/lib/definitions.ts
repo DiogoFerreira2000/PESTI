@@ -3,7 +3,6 @@ export type Room = {
   name: string;
   roomAlias: string;
   email: string;
-  busy: boolean;
 };
 
 export type Appointment = {

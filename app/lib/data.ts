@@ -211,6 +211,22 @@ export async function fetchFilteredRooms(query: string) {
       appointmentRoomCounts[room_id] = (appointmentRoomCounts[room_id] || 0) + 1;
     });
 
+    const roomAvailability: Record<string, boolean> = {};
+    rooms.forEach((room: Room) => {
+      roomAvailability[room._id] = true;
+    });
+
+    appointments.forEach((appointment: Appointment) => {
+      const room_id = appointment.room_id;
+      const appointmentStart = new Date(appointment.start);
+      const appointmentEnd = new Date(appointment.end);
+      const currentDateTime = new Date();
+
+      if(appointmentStart < currentDateTime && appointmentEnd > currentDateTime) {
+        roomAvailability[room_id] = false;
+      }
+    });
+
     const filteredRooms = rooms
     .filter((room: Room) => 
       room.name.includes(query) || room.roomAlias.includes(query) || room.email.includes(query)
@@ -221,7 +237,7 @@ export async function fetchFilteredRooms(query: string) {
         roomAlias: room.roomAlias,
         email: room.email,
         total_appointments: appointmentRoomCounts[room._id] || 0,
-        busy: room.busy
+        busy: roomAvailability[room._id],
       };
     });
 

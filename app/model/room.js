@@ -5,7 +5,6 @@ const roomSchema = new Schema(
     name: String,
     roomAlias: String,
     email: String,
-    busy: Boolean
   }, 
   {
     collection: "rooms" 
