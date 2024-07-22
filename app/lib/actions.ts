@@ -1,72 +1,79 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { transformTimeToDate } from './utils';
  
-const FormSchema = z.object({
-  _id: z.string(),
+const AppointmentSchema = z.object({
+  _id: z.string().optional(),
   subject: z.string()
     .min(5, { message: 'Subject must be at least 5 characters long.' })
     .max(30, { message: 'Subject must be at most 30 characters long.' }),
-  organizer: z.string(),
+  organizer: z.string()
+    .min(1, { message: 'Please insert an organizer.'}),
   room_id: z.string({
-    invalid_type_error: 'Please select a room.',
+    required_error: 'Please select a room.',
   }),
-  date: z.coerce.date().refine((date) => date > new Date(), {
-    message: 'Invalid date.'
-  }),
+  date: z.coerce.date(),
   start: z.string().regex(/^\d{2}:\d{2}$/, {
-    message: 'Start time must be in hh:mm format.',
+    message: 'Please insert a start time.',
   }),
   end: z.string().regex(/^\d{2}:\d{2}$/, {
-    message: 'End time must be in hh:mm format.',
+    message: 'Please insert an end time.',
   }),
   open: z.enum(['True', 'False'], {
-    invalid_type_error: 'Please select an appointment status.',
+    required_error: 'Please select an appointment status.',
   })
-});
-
-const RefinedSchema = FormSchema.omit({ _id: true }).refine((data) => {
+}).superRefine((data, ctx) => {
   const [startHours, startMinutes] = data.start.split(':').map(Number);
   const [endHours, endMinutes] = data.end.split(':').map(Number);
   const startTime = new Date(data.date).setHours(startHours, startMinutes);
   const endTime = new Date(data.date).setHours(endHours, endMinutes);
-  return endTime > startTime;
-}, {
-  message: 'End time must be greater than start time.',
-  path: ['end'],
+  const currentTime = new Date();
+
+  if (data.date.toDateString() === currentTime.toDateString()) {
+    if (startTime <= currentTime.getTime()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Start time must be greater than the current time.',
+        path: ['start'],
+      });
+    }
+  }
+
+  if (endTime <= startTime) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'End time must be greater than start time.',
+      path: ['end'],
+    });
+  }
 });
 
 export type State = {
-  message: string | null;
   errors?: {
-    subject?: string[],
-    organizer?: string[],
-    room_id?: string[],
-    date?: string[],
-    start?: string[],
-    end?: string[],
-    open?: string[],
+    _id?: string[] | undefined,
+    subject?: string[] | undefined,
+    organizer?: string[] | undefined,
+    room_id?: string[] | undefined,
+    date?: string[] | undefined,
+    start?: string[] | undefined,
+    end?: string[] | undefined,
+    open?: string[] | undefined,
   };
+  message?: string | null;
 };
 
-export async function createAppointment(prevState: State, formData: FormData) {
-  const validatedFields = RefinedSchema.safeParse({
-    subject: formData.get('subject'),
-    organizer: formData.get('organizer'),
-    room_id: formData.get('room_id'),
-    date: formData.get('date'),
-    start: formData.get('start'),
-    end: formData.get('end'),
-    open: formData.get('open'),
-  });
+
+export const createAppointment = async (prevState: State, formData: FormData) => {
+  const validatedFields = AppointmentSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Missing Fields. Failed to Create Appointment.',
+      success: false,
     };
   }
 
@@ -85,121 +92,101 @@ export async function createAppointment(prevState: State, formData: FormData) {
     open,
     room_id,
   };
-
-  const saveAppointment = async (appointmentData: {
-    subject: string; 
-    organizer: string; 
-    date: string; 
-    start: string; 
-    end: string; 
-    open: "True" | "False"; 
-    room_id: string; 
-  }) => {
-    const response = await fetch(`http://localhost:3000/api/appointments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(appointmentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save appointment');
-    }
-
-    return response.json();
-  };
   
   try {
-    await saveAppointment(appointment);
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
-  } catch (error: any) {
-    return {
-      errors: { general: [error.message] },
-      message: 'Failed to create appointment due to server error.',
+    const saveAppointment = async (appointmentData: {
+      subject: string; 
+      organizer: string; 
+      date: string; 
+      start: string; 
+      end: string; 
+      open: "True" | "False"; 
+      room_id: string; 
+    }) => {
+      const response = await fetch(`http://localhost:3000/api/appointments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to save appointment');
+      }
+  
+      return response.json();
     };
+
+    await saveAppointment(appointment);
+    return { success: true, errors: {}, message: null };
+    
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    return { message: "Failed to create appointment.", success: false, errors: {} };
   }
-}
+};
 
 
-export async function updateAppointment(prevState: State, formData: FormData, _id : string) {
-  const validatedFields = RefinedSchema.safeParse({
-    subject: formData.get('subject'),
-    organizer: formData.get('organizer'),
-    room_id: formData.get('room_id'),
-    date: formData.get('date'),
-    start: formData.get('start'),
-    end: formData.get('end'),
-    open: formData.get('open'),
-  });
+export async function updateAppointment(_id : string, prevState: State, formData: FormData) {
+  const validatedFields = AppointmentSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Missing fields. Failed to update the appointment.',
+      message: 'Missing Fields. Failed to Update Appointment.',
+      success: false,
     };
   }
 
-  const { subject, organizer, room_id, date, start, end, open } = validatedFields.data;
+  const { subject, room_id, date, start, end, open } = validatedFields.data;
   
-  let transformedDate, transformedStart, transformedEnd;
-
-  try {
-    transformedDate = new Date(date).toISOString();
-    transformedStart = transformTimeToDate(start, date);
-    transformedEnd = transformTimeToDate(end, date);
-  } catch (error) {
-    return {
-      errors: { general: ['Invalid date or time format.'] },
-      message: 'Failed to update appointment due to invalid date or time format.',
-    };
-  }
+  const transformedDate = new Date(date).toISOString();
+  const transformedStart = transformTimeToDate(start, date);
+  const transformedEnd = transformTimeToDate(end, date);
 
   const updatedAppointment = {
     _id,
     subject,
-    organizer,
-    room_id,
     date: transformedDate,
     start: transformedStart,
     end: transformedEnd,
     open,
-  };
-
-  const saveAppointment = async (appointmentData: {
-    _id: string;
-    subject: string;
-    organizer: string;
-    date: string; 
-    start: string; 
-    end: string; 
-    open: "True" | "False"; 
-    room_id: string; 
-  }) => {
-    const response = await fetch(`http://localhost:3000/api/appointments/${appointmentData._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(appointmentData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save appointment');
-    }
-
-    return response.json();
+    room_id,
   };
   
   try {
-    await saveAppointment(updatedAppointment);
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
-  } catch (error) {
-    return {
-      errors: { general: [error] },
-      message: 'Failed to update appointment due to server error.',
+    const editAppointment = async (appointmentData: {
+      _id: string;
+      subject: string;
+      date: string; 
+      start: string; 
+      end: string; 
+      open: "True" | "False"; 
+      room_id: string; 
+    }) => {
+      const response = await fetch(`http://localhost:3000/api/appointments/${appointmentData._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to update appointment');
+      }
+  
+      return response.json();
     };
+
+    await editAppointment(updatedAppointment);
+    return { success: true, errors: {}, message: null };
+    
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    return { message: "Failed to create appointment.", success: false, errors: {} };
   }
 }

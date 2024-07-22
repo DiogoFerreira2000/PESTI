@@ -3,31 +3,63 @@
 import { RoomField } from '@/app/lib/definitions';
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
-import { State, createAppointment } from '@/app/lib/actions';
-import { redirect, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { revalidatePath } from 'next/cache';
+import { createAppointment, State } from '@/app/lib/actions';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+const getMinDate = () => {
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  return minDate;
+};
 
 export default function CreateAppointmentForm({ 
   rooms,
 }: {
   rooms: RoomField[];
 }) {
-  const router = useRouter();
-  const initialState: State = { message: null, errors: {} };
-  const [state, setState] = useState(initialState);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-
-    const result = await createAppointment(state, formData);
-
-    if (!result.errors) {
-      revalidatePath('/dashboard/invoices');
-      redirect('/dashboard/invoices');
-    }
+  const initialState: State = {
+    errors: {
+      subject: [],
+      organizer: [],
+      room_id: [],
+      date: [],
+      start: [],
+      end: [],
+      open: [],
+    },
+    message: ''
   };
+
+  const [state, setState] = useState<State>(initialState);
+  const [result, setResult] = useState<any>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (result?.success) {
+      router.push('/dashboard/appointments');
+    } else if (result) {
+      setState(prevState => ({
+        ...prevState,
+        errors: result.errors,
+        message: result.message
+      }));
+    }
+  }, [result, router]);
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const formData = new FormData(event.target as HTMLFormElement);
+
+    const submitForm = async () => {
+      const res = await createAppointment(state, formData);
+      setResult(res);
+    };
+
+    submitForm();
+  };
+
+  const minDate = getMinDate();
 
   return (
     <form onSubmit={handleSubmit}>
@@ -45,8 +77,10 @@ export default function CreateAppointmentForm({
                 type="string"
                 placeholder="Enter the subject"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
               />
+              {state.errors?.subject && state.errors.subject.length > 0 && (
+                <span className="text-red-500">{state.errors.subject[0]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -64,8 +98,10 @@ export default function CreateAppointmentForm({
                 type="string"
                 placeholder="Enter the organizer"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
               />
+              {state.errors?.organizer && state.errors.organizer.length > 0 && (
+                <span className="text-red-500">{state.errors.organizer[0]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -92,14 +128,9 @@ export default function CreateAppointmentForm({
                 </option>
               ))}
             </select>
-          </div>
-          <div id="customer-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.room_id &&
-              state.errors.room_id.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-            ))}
+            {state.errors?.room_id && state.errors.room_id.length > 0 && (
+              <span className="text-red-500">{state.errors.room_id[0]}</span>
+            )}
           </div>
         </div>
 
@@ -113,11 +144,14 @@ export default function CreateAppointmentForm({
               <input
                 id="date"
                 name="date"
-                type="string"
+                type="date"
                 placeholder="Enter the date"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
+                min={minDate}
               />
+              {state.errors?.date && state.errors.date.length > 0 && (
+                <span className="text-red-500">{state.errors.date[0]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -132,11 +166,13 @@ export default function CreateAppointmentForm({
               <input
                 id="start"
                 name="start"
-                type="string"
+                type="time"
                 placeholder="Enter the start time"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
               />
+              {state.errors?.start && state.errors.start.length > 0 && (
+                <span className="text-red-500">{state.errors.start[0]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -151,11 +187,13 @@ export default function CreateAppointmentForm({
               <input
                 id="end"
                 name="end"
-                type="string"
+                type="time"
                 placeholder="Enter the end time"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                required
               />
+              {state.errors?.end && state.errors.end.length > 0 && (
+                <span className="text-red-500">{state.errors.end[0]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -185,7 +223,7 @@ export default function CreateAppointmentForm({
               <div className="flex items-center">
                 <input
                   id="False"
-                  name="closed"
+                  name="open"
                   type="radio"
                   value="False"
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
@@ -198,6 +236,9 @@ export default function CreateAppointmentForm({
                 </label>
               </div>
             </div>
+            {state.errors?.open && state.errors.open.length > 0 && (
+              <span className="text-red-500">{state.errors.open[0]}</span>
+            )}
           </div>
         </fieldset>
       </div>
@@ -208,7 +249,7 @@ export default function CreateAppointmentForm({
         >
           Cancel
         </Link>
-        <Button type="submit">Create Appointment</Button>
+        <Button type="submit">Create</Button>
       </div>
     </form>
   );
