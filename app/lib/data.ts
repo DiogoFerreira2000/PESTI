@@ -33,6 +33,31 @@ export async function fetchFilteredAppointments(query: string, currentPage: numb
       roomNameMap[room._id] = room.name;
     });
 
+    appointments.forEach(async (appointment: Appointment) => {
+      const id = appointment._id;
+      const appointmentEnd = new Date(appointment.end);
+      
+      const endTime = appointmentEnd.toISOString().split('T')[1].substring(0, 5);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+      const end = new Date(appointment.date).setHours(endHours, endMinutes);
+
+      const currentDateTime = new Date();
+
+      if(end < currentDateTime.getTime()) {
+        try {
+          const res = await fetch(`http://localhost:3000/api/appointments?_id=${id}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) {
+            throw new Error(`Failed to delete appointment with ID: ${id}`);
+          }
+          console.log(`Appointment with ID: ${id} deleted.`);
+        } catch (error) {
+          console.error(`Error deleting appointment with ID: ${id}`, error);
+        }
+      }
+    });
+
     const filteredAppointments = appointments
     .filter((appointment: Appointment) =>
       appointment.subject.includes(query) || roomNameMap[appointment.room_id].includes(query)
@@ -218,15 +243,29 @@ export async function fetchFilteredRooms(query: string) {
 
     appointments.forEach((appointment: Appointment) => {
       const room_id = appointment.room_id;
+
+      const appointmentDate = new Date(appointment.date);
       const appointmentStart = new Date(appointment.start);
       const appointmentEnd = new Date(appointment.end);
+      
+      const startTime = appointmentStart.toISOString().split('T')[1].substring(0, 5);
+      const endTime = appointmentEnd.toISOString().split('T')[1].substring(0, 5);
+
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+      const start = new Date(appointment.date).setHours(startHours, startMinutes);
+      const end = new Date(appointment.date).setHours(endHours, endMinutes);
+
       const currentDateTime = new Date();
 
-      if(appointmentStart < currentDateTime && appointmentEnd > currentDateTime) {
-        roomAvailability[room_id] = false;
+      if(appointmentDate.toDateString() === currentDateTime.toDateString()) {
+        if(start <= currentDateTime.getTime() && end > currentDateTime.getTime()) {
+          roomAvailability[room_id] = false;
+        }
       }
     });
-
+    
     const filteredRooms = rooms
     .filter((room: Room) => 
       room.name.includes(query) || room.roomAlias.includes(query) || room.email.includes(query)

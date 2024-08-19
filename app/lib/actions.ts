@@ -141,7 +141,7 @@ export async function updateAppointment(_id : string, prevState: State, formData
     };
   }
 
-  const { subject, room_id, date, start, end, open } = validatedFields.data;
+  const { subject, organizer, room_id, date, start, end, open } = validatedFields.data;
   
   const transformedDate = new Date(date).toISOString();
   const transformedStart = transformTimeToDate(start, date);
@@ -150,17 +150,19 @@ export async function updateAppointment(_id : string, prevState: State, formData
   const updatedAppointment = {
     _id,
     subject,
+    organizer,
     date: transformedDate,
     start: transformedStart,
     end: transformedEnd,
     open,
     room_id,
   };
-  
+
   try {
     const editAppointment = async (appointmentData: {
       _id: string;
       subject: string;
+      organizer: string;
       date: string; 
       start: string; 
       end: string; 
