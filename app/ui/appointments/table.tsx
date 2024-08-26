@@ -85,8 +85,9 @@ export default async function AppointmentsTable({
                 subject: string; 
                 organizer: string; 
                 roomName: string; 
-                date: string; start: 
-                string; end: string; 
+                date: string; 
+                start: string;
+                end: string; 
                 open: string; 
               }) => (
                 <tr
