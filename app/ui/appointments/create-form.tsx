@@ -85,27 +85,6 @@ export default function CreateAppointmentForm({
           </div>
         </div>
 
-        {/* Appointment Organizer */}
-        <div className="mb-4">
-          <label htmlFor="organizer" className="mb-2 block text-sm font-medium">
-            Set the organizer
-          </label>
-          <div className="relative mt-2 rounded-md">
-            <div className="relative">
-              <input
-                id="organizer"
-                name="organizer"
-                type="string"
-                placeholder="Enter the organizer"
-                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-              />
-              {state.errors?.organizer && state.errors.organizer.length > 0 && (
-                <span className="text-red-500">{state.errors.organizer[0]}</span>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Room Name */}
         <div className="mb-4">
           <label htmlFor="room" className="mb-2 block text-sm font-medium">

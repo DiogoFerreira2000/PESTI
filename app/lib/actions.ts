@@ -2,14 +2,14 @@
 
 import { z } from 'zod';
 import { transformTimeToDate } from './utils';
+import { getServerSession } from 'next-auth';
  
 const AppointmentSchema = z.object({
   _id: z.string().optional(),
   subject: z.string()
     .min(5, { message: 'Subject must be at least 5 characters long.' })
     .max(30, { message: 'Subject must be at most 30 characters long.' }),
-  organizer: z.string()
-    .min(1, { message: 'Please insert an organizer.'}),
+  organizer: z.string().optional(),
   room_id: z.string({
     required_error: 'Please select a room.',
   }),
@@ -63,11 +63,13 @@ export type State = {
   message?: string | null;
 };
 
-
 export const createAppointment = async (prevState: State, formData: FormData) => {
   const validatedFields = AppointmentSchema.safeParse(
     Object.fromEntries(formData.entries())
   );
+
+  const session = await getServerSession();
+  const username = session?.user?.name;
 
   if (!validatedFields.success) {
     return {
@@ -77,7 +79,7 @@ export const createAppointment = async (prevState: State, formData: FormData) =>
     };
   }
 
-  const { subject, organizer, room_id, date, start, end, open } = validatedFields.data;
+  const { subject, room_id, date, start, end, open } = validatedFields.data;
   
   const transformedDate = date.toISOString();
   const transformedStart = transformTimeToDate(start, date);
@@ -85,14 +87,14 @@ export const createAppointment = async (prevState: State, formData: FormData) =>
 
   const appointment = {
     subject,
-    organizer,
+    organizer: username ?? '',
     date: transformedDate,
     start: transformedStart,
     end: transformedEnd,
     open,
     room_id,
   };
-  
+
   try {
     const saveAppointment = async (appointmentData: {
       subject: string; 
@@ -141,7 +143,10 @@ export async function updateAppointment(_id : string, prevState: State, formData
     };
   }
 
-  const { subject, organizer, room_id, date, start, end, open } = validatedFields.data;
+  const session = await getServerSession();
+  const username = session?.user?.name;
+
+  const { subject, room_id, date, start, end, open } = validatedFields.data;
   
   const transformedDate = new Date(date).toISOString();
   const transformedStart = transformTimeToDate(start, date);
@@ -150,7 +155,7 @@ export async function updateAppointment(_id : string, prevState: State, formData
   const updatedAppointment = {
     _id,
     subject,
-    organizer,
+    organizer: username ?? '',
     date: transformedDate,
     start: transformedStart,
     end: transformedEnd,
